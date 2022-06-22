@@ -3,6 +3,7 @@
 # for complete details.
 
 import logging
+import os
 import platform
 import sys
 import sysconfig
@@ -379,11 +380,17 @@ def mac_platforms(
         # number.   The minor versions are now the midyear updates.
         for major_version in range(version[0], 10, -1):
             compat_version = major_version, 0
-            binary_formats = _mac_binary_formats(compat_version, arch)
-            for binary_format in binary_formats:
+            if os.environ.get('PIP_FORCE_MACOS_UNIVERSAL2') is not None:
+                binary_format = 'universal2'
                 yield "macosx_{major}_{minor}_{binary_format}".format(
                     major=major_version, minor=0, binary_format=binary_format
                 )
+            else:
+                binary_formats = _mac_binary_formats(compat_version, arch)
+                for binary_format in binary_formats:
+                    yield "macosx_{major}_{minor}_{binary_format}".format(
+                        major=major_version, minor=0, binary_format=binary_format
+                    )
 
     if version >= (11, 0):
         # Mac OS 11 on x86_64 is compatible with binaries from previous releases.
@@ -396,13 +403,21 @@ def mac_platforms(
         if arch == "x86_64":
             for minor_version in range(16, 3, -1):
                 compat_version = 10, minor_version
-                binary_formats = _mac_binary_formats(compat_version, arch)
-                for binary_format in binary_formats:
+                if os.environ.get('PIP_FORCE_MACOS_UNIVERSAL2') is not None:
+                    binary_format='universal2'
                     yield "macosx_{major}_{minor}_{binary_format}".format(
                         major=compat_version[0],
                         minor=compat_version[1],
                         binary_format=binary_format,
                     )
+                else:
+                    binary_formats = _mac_binary_formats(compat_version, arch)
+                    for binary_format in binary_formats:
+                        yield "macosx_{major}_{minor}_{binary_format}".format(
+                            major=compat_version[0],
+                            minor=compat_version[1],
+                            binary_format=binary_format,
+                        )
         else:
             for minor_version in range(16, 3, -1):
                 compat_version = 10, minor_version
